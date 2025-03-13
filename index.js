@@ -2,6 +2,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebas
 import {
   getDatabase,
   ref,
+  push,
+  onValue,
 } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 
 const appSettings = {
@@ -13,16 +15,30 @@ const app = initializeApp(appSettings);
 const database = getDatabase(app);
 const endorsementsRef = ref(database, "endorsements");
 
-console.log(endorsementsRef);
-
 const inputElField = document.querySelector("#input-el");
 const publishBtn = document.querySelector("#publish-btn");
 const messageUl = document.querySelector("#message-ul");
 
-publishBtn.addEventListener("click", function () {
+function appendToList(item) {
   const newLi = document.createElement("li");
+  const messageValue = item;
+
+  newLi.textContent = messageValue;
+  messageUl.append(newLi);
+}
+
+onValue(endorsementsRef, function (snapshot) {
+  const messageFromDB = Object.values(snapshot.val());
+  messageUl.innerHTML = "";
+
+  for (let i = 0; i < messageFromDB.length; i++) {
+    appendToList(messageFromDB[i]);
+  }
+});
+
+publishBtn.addEventListener("click", function () {
   const message = inputElField.value;
 
-  newLi.textContent = message;
-  messageUl.append(newLi);
+  push(endorsementsRef, message);
+  inputElField.value = "";
 });
